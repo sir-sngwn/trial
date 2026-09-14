@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyNotion - 나만의 공부 기록 & 복습 서재</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="theme-light">
+  <div id="app" class="app-layout">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <!-- Workspace Header -->
+      <div class="sidebar-header">
+        <div class="workspace-info">
+          <span class="workspace-icon">📚</span>
+          <div class="workspace-text">
+            <h2 class="workspace-title">StudyNotion</h2>
+            <span class="workspace-subtitle">나만의 공부 서재</span>
+          </div>
+        </div>
+        <button id="btn-collapse-sidebar" class="btn-icon" title="사이드바 닫기 (Ctrl+\)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="sidebar-quick-actions">
+        <button id="btn-open-search" class="sidebar-action-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <span>빠른 검색</span>
+          <kbd class="shortcut-badge">⌘K</kbd>
+        </button>
+        <button id="btn-open-stats" class="sidebar-action-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>공부 대시보드 & 통계</span>
+        </button>
+        <button id="btn-new-page" class="sidebar-action-btn primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>새 페이지 작성</span>
+          <kbd class="shortcut-badge">Alt+N</kbd>
+        </button>
+      </div>
+
+      <!-- Status Filter Chips -->
+      <div class="sidebar-section filter-section">
+        <div class="section-header">
+          <span>상태별 필터</span>
+        </div>
+        <div class="filter-pills" id="status-filters">
+          <button class="filter-pill active" data-filter="all">전체</button>
+          <button class="filter-pill" data-filter="시작 전">시작 전</button>
+          <button class="filter-pill" data-filter="공부 중">공부 중</button>
+          <button class="filter-pill" data-filter="복습 필요">복습 필요</button>
+          <button class="filter-pill" data-filter="완료">완료</button>
+        </div>
+      </div>
+
+      <!-- Pages Tree Navigation -->
+      <div class="sidebar-section pages-section">
+        <!-- Favorites -->
+        <div id="favorites-group" class="page-group">
+          <div class="section-header">
+            <span>⭐ 즐겨찾기</span>
+          </div>
+          <ul id="favorites-list" class="page-tree"></ul>
+        </div>
+
+        <!-- All Study Notes -->
+        <div class="page-group">
+          <div class="section-header">
+            <span>📝 모든 노트</span>
+            <button id="btn-add-root-page" class="btn-icon-xs" title="새 페이지 추가">+</button>
+          </div>
+          <ul id="pages-list" class="page-tree"></ul>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button id="btn-toggle-theme" class="sidebar-footer-btn" title="다크 모드 전환">
+          <span class="theme-icon">🌙</span>
+          <span class="theme-label">다크 모드</span>
+        </button>
+        <div class="save-indicator" id="sidebar-save-indicator">
+          <span class="indicator-dot"></span>
+          <span class="indicator-text">저장됨</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Resizer Handle -->
+    <div id="sidebar-resizer" class="resizer"></div>
+
+    <!-- Main Workspace Area -->
+    <main id="main-content" class="main-content">
+      <!-- Top Navigation Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button id="btn-expand-sidebar" class="btn-icon hidden" title="사이드바 열기">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <nav id="breadcrumbs" class="breadcrumbs">
+            <span class="breadcrumb-item">공부 서재</span>
+            <span class="breadcrumb-separator">/</span>
+            <span id="breadcrumb-current" class="breadcrumb-item active">노트</span>
+          </nav>
+        </div>
+
+        <div class="top-bar-right">
+          <!-- Active Recall (Quiz Mode) Toggle -->
+          <button id="btn-toggle-quiz" class="topbar-btn quiz-btn" title="모든 토글을 접어 스스로 테스트합니다">
+            <span class="btn-emoji">🧠</span>
+            <span class="btn-text">자가 퀴즈 모드</span>
+          </button>
+
+          <!-- Pomodoro Study Timer -->
+          <div class="pomodoro-widget" id="pomodoro-widget">
+            <span class="timer-badge" id="timer-mode">집중</span>
+            <span class="timer-display" id="timer-display">25:00</span>
+            <button id="btn-timer-toggle" class="btn-icon-sm" title="타이머 시작/일시정지">
+              <svg id="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="icon-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="hidden"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <button id="btn-timer-reset" class="btn-icon-sm" title="타이머 초기화">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            </button>
+          </div>
+
+          <!-- Study Status Dropdown -->
+          <div class="status-dropdown-container">
+            <select id="page-status-select" class="status-select">
+              <option value="시작 전">⚪ 시작 전</option>
+              <option value="공부 중" selected>🔵 공부 중</option>
+              <option value="복습 필요">🟠 복습 필요</option>
+              <option value="완료">🟢 완료</option>
+            </select>
+          </div>
+
+          <!-- Favorite Star -->
+          <button id="btn-toggle-favorite" class="btn-icon" title="즐겨찾기">
+            <svg id="icon-star" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+
+          <!-- Export Button -->
+          <button id="btn-export-md" class="topbar-btn" title="마크다운 파일 다운로드">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>내보내기</span>
+          </button>
+
+          <!-- Delete Page -->
+          <button id="btn-delete-page" class="btn-icon danger" title="페이지 삭제">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Document Container -->
+      <div id="document-scroll" class="document-scroll">
+        <!-- Cover Banner -->
+        <div id="page-cover" class="page-cover">
+          <div class="cover-overlay">
+            <button id="btn-change-cover" class="cover-action-btn">🖼️ 커버 변경</button>
+            <button id="btn-remove-cover" class="cover-action-btn">❌ 커버 삭제</button>
+          </div>
+        </div>
+
+        <!-- Page Main Canvas -->
+        <article class="page-canvas">
+          <!-- Page Header (Icon, Title, Tags, Meta) -->
+          <header class="page-header">
+            <!-- Icon Picker Trigger -->
+            <div class="page-icon-wrapper">
+              <button id="btn-page-icon" class="page-icon-btn" title="아이콘 변경">📝</button>
+              <div class="icon-hover-actions">
+                <button id="btn-add-cover" class="header-action-link">+ 커버 추가</button>
+              </div>
+            </div>
+
+            <!-- Page Title Input -->
+            <input 
+              type="text" 
+              id="page-title-input" 
+              class="page-title-input" 
+              placeholder="제목 없음"
+              autocomplete="off"
+              spellcheck="false"
+            />
+
+            <!-- Page Meta (Tags & Stats) -->
+            <div class="page-meta-row">
+              <div class="tags-container" id="tags-container">
+                <!-- Tag Badges -->
+                <div id="tags-list" class="tags-list"></div>
+                <!-- Add Tag Input -->
+                <div class="add-tag-box">
+                  <input type="text" id="tag-input" class="tag-input" placeholder="+ 태그 추가 (Enter)" />
+                </div>
+              </div>
+
+              <div class="study-time-badge" id="study-time-badge" title="이 노트에서 공부한 시간">
+                <span>⏱️ 누적 공부: </span>
+                <strong id="page-study-time">0분</strong>
+              </div>
+            </div>
+          </header>
+
+          <!-- Notion Block Editor -->
+          <div id="editor-container" class="editor-container">
+            <!-- Blocks rendered dynamically by editor.js -->
+          </div>
+
+          <!-- Bottom Click-to-add Area -->
+          <div id="editor-bottom-area" class="editor-bottom-area" title="클릭하여 새 블록 작성"></div>
+        </article>
+      </div>
+    </main>
+  </div>
+
+  <!-- Slash Command Dropdown Menu -->
+  <div id="slash-menu" class="slash-menu hidden">
+    <div class="slash-menu-header">기본 블록</div>
+    <div class="slash-menu-list" id="slash-menu-list">
+      <!-- Generated by editor.js -->
+    </div>
+  </div>
+
+  <!-- Quick Search Modal (Cmd+K) -->
+  <div id="search-modal" class="modal-backdrop hidden">
+    <div class="modal-card search-modal-card">
+      <div class="search-input-wrapper">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="global-search-input" class="global-search-input" placeholder="노트 제목, 태그, 본문 내용 검색..." autofocus />
+        <kbd class="shortcut-badge">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results-list">
+        <div class="search-empty-state">검색어를 입력하세요.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Study Dashboard & Stats Modal -->
+  <div id="stats-modal" class="modal-backdrop hidden">
+    <div class="modal-card stats-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">📊</span>
+          <h3>공부 대시보드 & 통계</h3>
+        </div>
+        <button id="btn-close-stats" class="btn-icon">✕</button>
+      </div>
+      <div class="stats-body" id="stats-body">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Emoji Picker Modal -->
+  <div id="emoji-modal" class="modal-backdrop hidden">
+    <div class="modal-card emoji-modal-card">
+      <div class="modal-header">
+        <h3>아이콘 선택</h3>
+        <button id="btn-close-emoji" class="btn-icon">✕</button>
+      </div>
+      <div class="emoji-grid" id="emoji-grid"></div>
+    </div>
+  </div>
+
+  <!-- Cover Picker Modal -->
+  <div id="cover-modal" class="modal-backdrop hidden">
+    <div class="modal-card cover-modal-card">
+      <div class="modal-header">
+        <h3>커버 이미지 선택</h3>
+        <button id="btn-close-cover" class="btn-icon">✕</button>
+      </div>
+      <div class="cover-presets" id="cover-presets"></div>
+      <div class="custom-cover-input">
+        <label>이미지 URL 직접 입력</label>
+        <div class="input-with-btn">
+          <input type="text" id="cover-url-input" placeholder="https://images.unsplash.com/..." />
+          <button id="btn-apply-cover-url" class="btn-primary">적용</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/editor.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+

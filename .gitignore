@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# SQLite database files (generated automatically on first run)
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Environments & IDEs
+.venv/
+env/
+venv/
+.DS_Store
+.vscode/
+.idea/
